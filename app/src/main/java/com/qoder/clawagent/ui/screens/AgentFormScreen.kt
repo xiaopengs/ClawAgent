@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.qoder.clawagent.AppViewModel
 import com.qoder.clawagent.data.SampleData
+import com.qoder.clawagent.model.AppScreen
 import com.qoder.clawagent.ui.ScreenHeader
 import com.qoder.clawagent.ui.TagPill
 import com.qoder.clawagent.ui.dashedBorder
@@ -99,7 +100,7 @@ fun AgentFormScreen(
                 .padding(horizontal = 20.dp, vertical = 4.dp),
         ) {
             UpgradeBanner {
-                Toast.makeText(context, "升级入口即将上线", Toast.LENGTH_SHORT).show()
+                vm.navigate(AppScreen.Upgrade)
             }
             Spacer(Modifier.height(16.dp))
 

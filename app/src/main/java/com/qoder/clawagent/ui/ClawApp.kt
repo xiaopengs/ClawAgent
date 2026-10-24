@@ -19,12 +19,19 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.qoder.clawagent.AppViewModel
 import com.qoder.clawagent.model.AppScreen
 import com.qoder.clawagent.ui.screens.AgentFormScreen
+import com.qoder.clawagent.ui.screens.AgentSettingsScreen
 import com.qoder.clawagent.ui.screens.ChatScreen
 import com.qoder.clawagent.ui.screens.CozeTemplatesScreen
 import com.qoder.clawagent.ui.screens.ExtensionsOverlay
 import com.qoder.clawagent.ui.screens.HomeScreen
+import com.qoder.clawagent.ui.screens.LocalAgentScreen
 import com.qoder.clawagent.ui.screens.NewAgentScreen
+import com.qoder.clawagent.ui.screens.ProfileScreen
+import com.qoder.clawagent.ui.screens.ProjectDetailScreen
 import com.qoder.clawagent.ui.screens.TabScreen
+import com.qoder.clawagent.ui.screens.ThirdPartyAgentsScreen
+import com.qoder.clawagent.ui.screens.TopicTrackingScreen
+import com.qoder.clawagent.ui.screens.UpgradeScreen
 import com.qoder.clawagent.ui.theme.Bg
 
 @Composable
@@ -78,6 +85,29 @@ fun ClawApp(vm: AppViewModel = viewModel()) {
                     vm = vm,
                     templateId = screen.templateId,
                 )
+
+                is AppScreen.ProjectDetail -> ProjectDetailScreen(
+                    vm = vm,
+                    projectId = screen.projectId,
+                )
+
+                is AppScreen.AgentSettings -> AgentSettingsScreen(
+                    vm = vm,
+                    agentId = screen.agentId,
+                )
+
+                is AppScreen.TopicTracking -> TopicTrackingScreen(
+                    vm = vm,
+                    focusTopicId = screen.topicId,
+                )
+
+                AppScreen.ThirdPartyAgents -> ThirdPartyAgentsScreen(vm)
+
+                AppScreen.LocalAgent -> LocalAgentScreen(vm)
+
+                AppScreen.Profile -> ProfileScreen(vm = vm)
+
+                AppScreen.Upgrade -> UpgradeScreen(vm)
 
                 is AppScreen.Tab -> TabScreen(
                     vm = vm,

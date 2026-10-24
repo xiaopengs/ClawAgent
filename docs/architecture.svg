@@ -42,7 +42,7 @@
   <rect width="1600" height="1180" fill="url(#dots)" opacity=".55"/>
 
   <text x="64" y="72" class="title">爪爪 · AI Agent 对话</text>
-  <text x="64" y="102" class="subtitle">Android 原生架构总览（v1.3）· 一处 ReplySource 接缝，两种推理引擎</text>
+  <text x="64" y="102" class="subtitle">Android 原生架构总览（v1.4）· 一处 ReplySource 接缝，两种云引擎 + 本地端点</text>
   <g transform="translate(1348,50)">
     <rect width="188" height="40" rx="20" fill="#141312"/>
     <text x="94" y="25" text-anchor="middle" style="font:600 13px 'Noto Sans SC','PingFang SC',sans-serif; fill:#FFFFFF;">Kotlin 2.3.21 · Compose</text>
@@ -204,7 +204,7 @@
   <text x="1227" y="278" text-anchor="middle" class="pill-text">ADK</text>
   <text x="1262" y="279" class="box-text" style="fill:#141312;">AdkReplySource</text>
   <text x="1204" y="303" class="box-text">工具调用 · 事件流 · 会话运行时</text>
-  <text x="1204" y="326" class="box-text">同一 Key、同一模型、同一条接口</text>
+  <text x="1204" y="326" class="box-text">本地 Agent 则由 LocalReplySource 直连 /v1</text>
 
   <!-- design notes -->
   <text x="1184" y="376" class="layer">设计要点</text>
@@ -241,15 +241,15 @@
   <!-- tests -->
   <text x="1184" y="908" class="layer">测试与验证</text>
   <rect x="1184" y="922" width="352" height="156" rx="20" class="box-test"/>
-  <text x="1204" y="950" class="box-title" style="font-size:15px;">19 个测试 · 2 个联调用例按需开启</text>
-  <text x="1204" y="975" class="box-text">ChatConversationTest ×7</text>
-  <text x="1204" y="996" class="box-text">OpenRouterRepositoryTest ×2</text>
+  <text x="1204" y="950" class="box-title" style="font-size:15px;">39 个测试 · 2 个联调用例按需开启</text>
+  <text x="1204" y="975" class="box-text">ChatConversationTest ×9</text>
+  <text x="1204" y="996" class="box-text">OpenRouterRepositoryTest ×5</text>
   <text x="1204" y="1017" class="box-text">AdkReplySourceTest ×2</text>
-  <text x="1204" y="1038" class="box-text">ScreenshotTest (Roborazzi) ×8</text>
+  <text x="1204" y="1038" class="box-text">ScreenshotTest (Roborazzi) ×17 · AppViewModel ×6</text>
   <text x="1204" y="1059" class="box-text">OpenRouterLiveTest / AdkLiveTest ×2</text>
 
   <!-- footer -->
   <line x1="64" y1="1118" x2="1536" y2="1118" stroke="#DCD9D3" stroke-width="1.5"/>
-  <text x="64" y="1146" class="subtitle" style="font-size:13px;">实线 = 运行时调用　虚线 = 配置读取　·　ADK 1.4.0 需要 compileSdk 37 / Kotlin 2.3；接缝保证它不会渗进会话领域</text>
+  <text x="64" y="1146" class="subtitle" style="font-size:13px;">实线 = 运行时调用　虚线 = 配置读取　·　v1.4 补齐附件 / 语音 / 日程 / 云盘 / 本地 Agent；云引擎共享接缝，本地端点独立路由</text>
   <text x="1536" y="1146" text-anchor="end" class="label">docs/architecture.svg</text>
 </svg>

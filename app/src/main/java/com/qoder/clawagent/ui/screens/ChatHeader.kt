@@ -1,6 +1,5 @@
 package com.qoder.clawagent.ui.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -20,6 +19,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronLeft
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material.icons.outlined.CloudQueue
+import androidx.compose.material.icons.outlined.Computer
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -31,12 +32,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.qoder.clawagent.model.Agent
+import com.qoder.clawagent.model.AgentKind
 import com.qoder.clawagent.ui.theme.Ink
 import com.qoder.clawagent.ui.theme.Muted
 import com.qoder.clawagent.ui.theme.White
@@ -49,9 +50,19 @@ internal fun ChatHeader(
     onBack: () -> Unit,
     onClear: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenAgentSettings: () -> Unit,
     onCloudClick: () -> Unit,
 ) {
-    val context = LocalContext.current
+    val runtimeLabel = when (agent.kind) {
+        AgentKind.COZE -> "云端"
+        AgentKind.THIRD_PARTY -> "云电脑"
+        AgentKind.LOCAL -> "本地"
+    }
+    val runtimeIcon = when (agent.kind) {
+        AgentKind.COZE -> Icons.Outlined.Cloud
+        AgentKind.THIRD_PARTY -> Icons.Outlined.CloudQueue
+        AgentKind.LOCAL -> Icons.Outlined.Computer
+    }
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -96,7 +107,7 @@ internal fun ChatHeader(
             ) {
                 Box {
                     Icon(
-                        imageVector = Icons.Outlined.Cloud,
+                        imageVector = runtimeIcon,
                         contentDescription = null,
                         tint = Muted,
                         modifier = Modifier.size(16.dp),
@@ -110,7 +121,7 @@ internal fun ChatHeader(
                     )
                 }
                 Spacer(Modifier.width(3.dp))
-                Text("云端", color = Muted, fontSize = 12.sp)
+                Text(runtimeLabel, color = Muted, fontSize = 12.sp)
                 Icon(
                     imageVector = Icons.Outlined.ChevronRight,
                     contentDescription = null,
@@ -157,7 +168,7 @@ internal fun ChatHeader(
                     text = { Text("Agent 设置", color = Ink, fontSize = 15.sp) },
                     onClick = {
                         onMoreMenuChange(false)
-                        Toast.makeText(context, "Agent 设置即将上线", Toast.LENGTH_SHORT).show()
+                        onOpenAgentSettings()
                     },
                 )
             }

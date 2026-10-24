@@ -3,6 +3,9 @@ package com.qoder.clawagent.network
 import android.content.Context
 import com.aallam.openai.api.chat.ChatCompletionRequest
 import com.aallam.openai.api.chat.ChatMessage as SdkChatMessage
+import com.aallam.openai.api.chat.ImagePart
+import com.aallam.openai.api.chat.TextPart
+import com.aallam.openai.api.chat.userMessage
 import com.aallam.openai.api.http.Timeout
 import com.aallam.openai.api.logging.LogLevel
 import com.aallam.openai.api.model.ModelId
@@ -17,11 +20,16 @@ import com.qoder.clawagent.chat.ReplySource
 import com.qoder.clawagent.chat.ReplyUnavailableException
 import com.qoder.clawagent.chat.agentInstruction
 import com.qoder.clawagent.model.Agent
+import com.qoder.clawagent.model.AttachmentKind
+import com.qoder.clawagent.model.ChatMessage
 import io.ktor.client.engine.okhttp.OkHttp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
 import kotlin.time.Duration.Companion.seconds
 
 data class OpenRouterConfig(
@@ -36,6 +44,8 @@ enum class PromptRole { SYSTEM, USER, ASSISTANT }
 data class PromptMessage(
     val role: PromptRole,
     val content: String,
+    /** Data URLs forwarded as image parts on the next user turn. */
+    val images: List<String> = emptyList(),
 )
 
 interface OpenRouterSettingsStore {
@@ -138,7 +148,17 @@ class OpenRouterClient {
 
     private fun PromptMessage.toSdkMessage(): SdkChatMessage = when (role) {
         PromptRole.SYSTEM -> SdkChatMessage.System(content)
-        PromptRole.USER -> SdkChatMessage.User(content)
+        PromptRole.USER -> if (images.isEmpty()) {
+            SdkChatMessage.User(content)
+        } else {
+            val textContent = content
+            userMessage {
+                contentParts = buildList {
+                    if (textContent.isNotBlank()) add(TextPart(textContent))
+                    images.forEach { add(ImagePart(it)) }
+                }
+            }
+        }
         PromptRole.ASSISTANT -> SdkChatMessage.Assistant(content)
     }
 
@@ -176,26 +196,139 @@ class OpenRouterRepository(
         return client.stream(buildMessages(agent, history), config)
     }
 
-    internal fun buildMessages(agent: Agent, history: List<com.qoder.clawagent.model.ChatMessage>): List<PromptMessage> {
-        val systemPrompt = agentInstruction(agent)
-        val turns = history
-            .filter { !it.isError && it.text.isNotBlank() }
-            .takeLast(MAX_HISTORY_MESSAGES)
-            .map { message ->
-                PromptMessage(
-                    role = if (message.fromUser) PromptRole.USER else PromptRole.ASSISTANT,
-                    content = message.text.take(MAX_MESSAGE_CHARS),
-                )
-            }
-            .toList()
-        return buildList {
-            add(PromptMessage(PromptRole.SYSTEM, systemPrompt))
-            addAll(turns)
-        }
-    }
+    internal fun buildMessages(agent: Agent, history: List<ChatMessage>): List<PromptMessage> =
+        buildPromptMessages(agent, history)
 
     private companion object {
         const val MAX_HISTORY_MESSAGES = 12
         const val MAX_MESSAGE_CHARS = 6000
+    }
+}
+
+/**
+ * Shared prompt construction for direct, ADK and local OpenAI-compatible
+ * runtimes. Files are flattened into labelled text; images remain data URLs so
+ * both transports can attach them as multimodal parts.
+ */
+internal fun buildPromptMessages(agent: Agent, history: List<ChatMessage>): List<PromptMessage> {
+    val turns = history
+        .takeLast(20)
+        .mapNotNull { message ->
+            if (message.isError) return@mapNotNull null
+            val fileContext = message.attachments
+                .filter { it.kind == AttachmentKind.FILE }
+                .joinToString("\n\n") { attachment ->
+                    val body = attachment.text
+                        ?.take(MAX_ATTACHMENT_CHARS)
+                        ?.let { "\n$it" }
+                        .orEmpty()
+                    "[文件：${attachment.name} (${attachment.mimeType})]$body"
+                }
+            val content = listOf(message.text.take(MAX_MESSAGE_CHARS), fileContext)
+                .filter { it.isNotBlank() }
+                .joinToString("\n\n")
+            val images = message.attachments
+                .filter { it.kind == AttachmentKind.IMAGE && !it.dataUrl.isNullOrBlank() }
+                .mapNotNull { it.dataUrl }
+                .take(MAX_IMAGES)
+            if (content.isBlank() && images.isEmpty()) {
+                null
+            } else {
+                PromptMessage(
+                    role = if (message.fromUser) PromptRole.USER else PromptRole.ASSISTANT,
+                    content = content,
+                    images = images,
+                )
+            }
+        }
+        .takeLast(MAX_HISTORY_MESSAGES)
+    return buildList {
+        add(PromptMessage(PromptRole.SYSTEM, agentInstruction(agent)))
+        addAll(turns)
+    }
+}
+
+private const val MAX_HISTORY_MESSAGES = 12
+private const val MAX_MESSAGE_CHARS = 6000
+private const val MAX_ATTACHMENT_CHARS = 8000
+private const val MAX_IMAGES = 4
+
+data class LocalProbeResult(
+    val models: List<String> = emptyList(),
+    val error: String? = null,
+)
+
+/**
+ * Probes a local OpenAI-compatible server (Ollama, LM Studio, vLLM, ...) before
+ * an Agent is created. It only performs a GET /models and never stores the key.
+ */
+object LocalEndpointProbe {
+    suspend fun probe(endpoint: String, apiKey: String = ""): LocalProbeResult = withContext(Dispatchers.IO) {
+        val base = endpoint.trim().trimEnd('/')
+        if (!base.startsWith("http://") && !base.startsWith("https://")) {
+            return@withContext LocalProbeResult(error = "地址需以 http:// 或 https:// 开头")
+        }
+        val connection = try {
+            (URL("$base/models").openConnection() as HttpURLConnection).apply {
+                connectTimeout = 8_000
+                readTimeout = 8_000
+                requestMethod = "GET"
+                setRequestProperty("Accept", "application/json")
+                if (apiKey.isNotBlank()) {
+                    setRequestProperty("Authorization", "Bearer ${apiKey.trim()}")
+                }
+            }
+        } catch (error: Exception) {
+            return@withContext LocalProbeResult(error = "地址格式无效：${error.message.orEmpty().take(80)}")
+        }
+        try {
+            val code = connection.responseCode
+            if (code !in 200..299) {
+                val reason = when (code) {
+                    401, 403 -> "鉴权失败，请检查 Local API Key"
+                    404 -> "未找到 /models，请确认 Base URL 以 /v1 结尾"
+                    else -> "服务返回 HTTP $code"
+                }
+                return@withContext LocalProbeResult(error = reason)
+            }
+            val body = connection.inputStream.bufferedReader().use { it.readText() }.take(200_000)
+            val ids = Regex("\"id\"\\s*:\\s*\"([^\"]+)\"")
+                .findAll(body)
+                .map { it.groupValues[1] }
+                .distinct()
+                .take(60)
+                .toList()
+            if (ids.isEmpty()) {
+                LocalProbeResult(error = "已连通，但没有发现模型；请先在本地服务中加载模型")
+            } else {
+                LocalProbeResult(models = ids)
+            }
+        } catch (error: Exception) {
+            LocalProbeResult(error = "连接失败：${error.message.orEmpty().take(100)}")
+        } finally {
+            connection.disconnect()
+        }
+    }
+}
+
+/** Replies through a model server on the user's own machine or LAN. */
+class LocalReplySource : ReplySource {
+    private val client = OpenRouterClient()
+
+    override fun stream(agent: Agent, history: List<ChatMessage>): Flow<String> {
+        val endpoint = agent.localEndpoint.orEmpty().trim()
+        val model = agent.localModel.orEmpty().trim()
+        if (endpoint.isBlank() || model.isBlank()) {
+            throw ReplyUnavailableException("本地 Agent 缺少 Endpoint 或模型，请在 Agent 设置中补全。")
+        }
+        if (!endpoint.startsWith("http://") && !endpoint.startsWith("https://")) {
+            throw ReplyUnavailableException("本地 Endpoint 必须以 http:// 或 https:// 开头。")
+        }
+        val config = OpenRouterConfig(
+            apiKey = agent.localApiKey.orEmpty().ifBlank { "local" },
+            model = model,
+            baseUrl = endpoint,
+        )
+        return client.stream(buildPromptMessages(agent, history), config)
     }
 }

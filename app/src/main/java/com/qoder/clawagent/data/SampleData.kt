@@ -3,14 +3,18 @@ package com.qoder.clawagent.data
 import com.qoder.clawagent.model.Agent
 import com.qoder.clawagent.model.AvatarStyle
 import com.qoder.clawagent.model.ChatMessage
+import com.qoder.clawagent.model.DriveFile
 import com.qoder.clawagent.model.ExtensionOption
 import com.qoder.clawagent.model.McpIconKind
 import com.qoder.clawagent.model.McpService
 import com.qoder.clawagent.model.PluginItem
 import com.qoder.clawagent.model.Project
+import com.qoder.clawagent.model.ScheduleTask
 import com.qoder.clawagent.model.Skill
 import com.qoder.clawagent.model.SkillSection
 import com.qoder.clawagent.model.Template
+import com.qoder.clawagent.model.ThirdPartyAgent
+import com.qoder.clawagent.model.TopicTrackingItem
 
 object SampleData {
 
@@ -385,4 +389,113 @@ object SampleData {
     )
 
     val agentNameIdeas = listOf("星野", "小满", "山岚", "望舒", "拾光", "昭野", "青梧", "知夏")
+
+    val thirdPartyAgents = listOf(
+        ThirdPartyAgent(
+            id = "third-claude",
+            name = "Claude Code",
+            description = "在云电脑工作区里阅读仓库、修改代码并执行命令。",
+            command = "claude",
+            icon = ">_",
+            iconBg = 0xFFF5D7C9,
+            avatar = AvatarStyle.TERMINAL,
+        ),
+        ThirdPartyAgent(
+            id = "third-codex",
+            name = "Codex CLI",
+            description = "面向长任务的代码执行 Agent，适合重构与批量修改。",
+            command = "codex",
+            icon = "⌘",
+            iconBg = 0xFFDCE7F6,
+            avatar = AvatarStyle.ROBOT,
+        ),
+        ThirdPartyAgent(
+            id = "third-gemini",
+            name = "Gemini CLI",
+            description = "接入 Google 命令行 Agent，处理多模态与检索任务。",
+            command = "gemini",
+            icon = "✦",
+            iconBg = 0xFFE4DDF7,
+            avatar = AvatarStyle.SPARK,
+        ),
+        ThirdPartyAgent(
+            id = "third-opencode",
+            name = "OpenCode",
+            description = "开源的终端编程 Agent，可连接多种模型提供方。",
+            command = "opencode",
+            icon = "</>",
+            iconBg = 0xFFD9E4D2,
+            avatar = AvatarStyle.GLASSES,
+        ),
+    )
+
+    val scheduleTasks = listOf(
+        ScheduleTask(
+            id = "task-morning-news",
+            title = "生成 AI 哨兵晚报",
+            timeLabel = "每天 08:30",
+            repeatLabel = "每天",
+            agentName = "黑爪爪",
+        ),
+        ScheduleTask(
+            id = "task-weekly-review",
+            title = "整理本周项目进展",
+            timeLabel = "周五 18:00",
+            repeatLabel = "每周",
+            agentName = "编程专家",
+        ),
+        ScheduleTask(
+            id = "task-market",
+            title = "A股收盘复盘",
+            timeLabel = "交易日 15:30",
+            repeatLabel = "工作日",
+            agentName = "数据分析师",
+            done = true,
+        ),
+    )
+
+    val driveFiles = listOf(
+        DriveFile(
+            id = "drive-nightly",
+            name = "AI哨兵晚报-2026-10-23.md",
+            mimeType = "text/markdown",
+            sizeLabel = "18 KB",
+            addedLabel = "今天",
+            previewText = "# AI 哨兵晚报（10/23）\n\n- OpenAI 全面开放 Decisions API\n- 推理延迟进入亚毫秒区间\n- 应用层设计从长链路转向单次判断",
+        ),
+        DriveFile(
+            id = "drive-spec",
+            name = "灵感池-PRD-v2.pdf",
+            mimeType = "application/pdf",
+            sizeLabel = "1.8 MB",
+            addedLabel = "昨天",
+            previewText = "产品需求文档：灵感池 v2\n\n1. 信息架构重构\n2. 灵感采集与聚类\n3. 与 Agent 工作区联动",
+        ),
+        DriveFile(
+            id = "drive-review",
+            name = "code-review-notes.txt",
+            mimeType = "text/plain",
+            sizeLabel = "6 KB",
+            addedLabel = "10月21日",
+            previewText = "Code review notes\n\n- 收敛 ChatConversation 状态\n- 补齐错误映射测试\n- 网络层统一流式接口",
+        ),
+    )
+
+    val topicItems = listOf(
+        TopicTrackingItem(
+            id = "topic-openai",
+            title = "OpenAI 全面开放 Decisions API",
+            summary = "基于 GPT-6 Luna 的准实时决策接口，响应速度最高提升 10 倍，输出免费。",
+            source = "AI哨兵晚报 · 10/23",
+            updatedLabel = "今天 20:02",
+        ),
+        TopicTrackingItem(
+            id = "topic-adk",
+            title = "Google ADK for Kotlin",
+            summary = "在 Android 端用 LlmAgent、Runner 和工具调用编排 Agent 运行时。",
+            source = "开发者社区 · 10/20",
+            updatedLabel = "4 天前",
+            followed = false,
+        ),
+    )
 }

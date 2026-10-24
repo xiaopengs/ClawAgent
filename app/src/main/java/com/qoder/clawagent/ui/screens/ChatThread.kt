@@ -1,5 +1,6 @@
 package com.qoder.clawagent.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,6 +22,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
@@ -32,17 +34,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.qoder.clawagent.model.Agent
+import com.qoder.clawagent.model.AttachmentKind
+import com.qoder.clawagent.model.ChatAttachment
 import com.qoder.clawagent.model.ChatMessage
 import com.qoder.clawagent.ui.AgentAvatar
 import com.qoder.clawagent.ui.theme.Accent
@@ -51,6 +57,8 @@ import com.qoder.clawagent.ui.theme.Ink
 import com.qoder.clawagent.ui.theme.Line
 import com.qoder.clawagent.ui.theme.Muted
 import com.qoder.clawagent.ui.theme.White
+import com.qoder.clawagent.util.decodeAttachmentBitmap
+import com.qoder.clawagent.util.formatSize
 
 @Composable
 internal fun ChatThread(
@@ -314,19 +322,87 @@ private fun UserMessage(message: ChatMessage) {
         horizontalArrangement = Arrangement.End,
     ) {
         Column(
-            modifier = Modifier
-                .widthIn(max = 300.dp)
-                .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 6.dp))
-                .background(Ink)
-                .padding(horizontal = 15.dp, vertical = 11.dp),
+            modifier = Modifier.widthIn(max = 300.dp),
             horizontalAlignment = Alignment.End,
         ) {
+            val images = message.attachments.filter { it.kind == AttachmentKind.IMAGE }
+            images.forEachIndexed { index, image ->
+                if (index > 0) Spacer(Modifier.height(6.dp))
+                val bitmap = remember(image.dataUrl) { decodeAttachmentBitmap(image.dataUrl) }
+                if (bitmap != null) {
+                    Image(
+                        bitmap = bitmap,
+                        contentDescription = image.name,
+                        modifier = Modifier
+                            .width(240.dp)
+                            .height(160.dp)
+                            .clip(RoundedCornerShape(16.dp)),
+                        contentScale = ContentScale.Crop,
+                    )
+                } else {
+                    AttachmentFileChip(image)
+                }
+            }
+            val files = message.attachments.filter { it.kind == AttachmentKind.FILE }
+            files.forEachIndexed { index, file ->
+                if (index > 0 || images.isNotEmpty()) Spacer(Modifier.height(6.dp))
+                AttachmentFileChip(file)
+            }
+            if (message.text.isNotBlank()) {
+                if (message.attachments.isNotEmpty()) Spacer(Modifier.height(6.dp))
+                Column(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 6.dp))
+                        .background(Ink)
+                        .padding(horizontal = 15.dp, vertical = 11.dp),
+                ) {
+                    Text(
+                        text = message.text,
+                        color = White,
+                        fontSize = 16.sp,
+                        lineHeight = 24.sp,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AttachmentFileChip(attachment: ChatAttachment) {
+    Row(
+        modifier = Modifier
+            .widthIn(max = 280.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(White)
+            .border(1.dp, Line.copy(alpha = 0.7f), RoundedCornerShape(12.dp))
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Description,
+            contentDescription = null,
+            tint = Ink,
+            modifier = Modifier.size(18.dp),
+        )
+        Spacer(Modifier.width(8.dp))
+        Column(Modifier.weight(1f, fill = false)) {
             Text(
-                text = message.text,
-                color = White,
-                fontSize = 16.sp,
-                lineHeight = 24.sp,
+                text = attachment.name,
+                color = Ink,
+                fontSize = 12.5.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
+            if (attachment.sizeBytes > 0) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = formatSize(attachment.sizeBytes),
+                    color = Muted,
+                    fontSize = 10.5.sp,
+                )
+            }
         }
     }
 }

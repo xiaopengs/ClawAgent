@@ -6,7 +6,9 @@ import com.qoder.clawagent.chat.ReplySource
 import com.qoder.clawagent.chat.ReplyUnavailableException
 import com.qoder.clawagent.chat.SendResult
 import com.qoder.clawagent.model.Agent
+import com.qoder.clawagent.model.AttachmentKind
 import com.qoder.clawagent.model.AvatarStyle
+import com.qoder.clawagent.model.ChatAttachment
 import com.qoder.clawagent.model.ChatMessage
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -199,5 +201,53 @@ class ChatConversationTest {
 
         assertEquals(SendResult.EMPTY, conversation.send("   "))
         assertTrue(conversation.state.value.messages.isEmpty())
+    }
+
+    @Test
+    fun `an attachment only turn is sent with its snapshot`() = runTest {
+        var seen: List<ChatMessage> = emptyList()
+        val image = ChatAttachment(
+            id = "image-1",
+            kind = AttachmentKind.IMAGE,
+            name = "beach.jpg",
+            mimeType = "image/jpeg",
+            sizeBytes = 12,
+            dataUrl = "data:image/jpeg;base64,AAA",
+        )
+        val conversation = conversation(
+            replies = { _, history ->
+                seen = history
+                flow { emit("收到") }
+            },
+            scope = this,
+        )
+
+        assertEquals(SendResult.SENT, conversation.send("   ", listOf(image)))
+        advanceUntilIdle()
+
+        val userTurn = seen.single()
+        assertEquals("", userTurn.text)
+        assertEquals(listOf(image), userTurn.attachments)
+        assertEquals("收到", conversation.state.value.messages.last().text)
+    }
+
+    @Test
+    fun `updateAgent is used by the next reply turn`() = runTest {
+        val prompts = mutableListOf<Agent>()
+        val conversation = conversation(
+            replies = { promptAgent, _ ->
+                prompts += promptAgent
+                flow { emit("好") }
+            },
+            scope = this,
+        )
+
+        conversation.send("第一轮")
+        advanceUntilIdle()
+        conversation.updateAgent(agent.copy(name = "新名字"))
+        conversation.send("第二轮")
+        advanceUntilIdle()
+
+        assertEquals(listOf("测试助手", "新名字"), prompts.map { it.name })
     }
 }

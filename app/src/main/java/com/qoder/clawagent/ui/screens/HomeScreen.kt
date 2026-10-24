@@ -1,6 +1,5 @@
 package com.qoder.clawagent.ui.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,11 +28,15 @@ import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.SmartToy
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,10 +47,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -64,6 +67,7 @@ import com.qoder.clawagent.ui.ProfileMiniAvatar
 import com.qoder.clawagent.ui.ProjectIcon
 import com.qoder.clawagent.ui.theme.Bg
 import com.qoder.clawagent.ui.theme.Ink
+import com.qoder.clawagent.ui.theme.Line
 import com.qoder.clawagent.ui.theme.Muted
 import com.qoder.clawagent.ui.theme.White
 
@@ -72,11 +76,13 @@ fun HomeScreen(
     vm: AppViewModel,
     onOpenExtensions: (Int) -> Unit,
 ) {
-    val context = LocalContext.current
     var expanded by rememberSaveable { mutableStateOf(false) }
     var searchOpen by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
     var plusMenuOpen by remember { mutableStateOf(false) }
+    var newProjectOpen by rememberSaveable { mutableStateOf(false) }
+    var projectName by rememberSaveable { mutableStateOf("") }
+    var projectIsWebsite by rememberSaveable { mutableStateOf(false) }
     val searchFocus = remember { FocusRequester() }
 
     LaunchedEffect(searchOpen) {
@@ -85,7 +91,7 @@ fun HomeScreen(
         }
     }
 
-    val agents = vm.agents.toList()
+    val agents = vm.agents.toList().filter { it.visibleInList }
     val projects = vm.projects.toList()
     val filteredAgents = if (query.isBlank()) {
         agents
@@ -125,7 +131,7 @@ fun HomeScreen(
                         .clip(RoundedCornerShape(50))
                         .background(White)
                         .clickable {
-                            Toast.makeText(context, "个人进阶 · 演示工作区", Toast.LENGTH_SHORT).show()
+                            vm.navigate(AppScreen.Profile)
                         }
                         .padding(start = 5.dp, end = 11.dp, top = 4.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -208,7 +214,9 @@ fun HomeScreen(
                             },
                             onClick = {
                                 plusMenuOpen = false
-                                Toast.makeText(context, "新建项目即将上线", Toast.LENGTH_SHORT).show()
+                                projectName = ""
+                                projectIsWebsite = false
+                                newProjectOpen = true
                             },
                             modifier = Modifier.height(54.dp),
                         )
@@ -323,7 +331,7 @@ fun HomeScreen(
                     }
                     items(filteredProjects, key = { it.id }) { project ->
                         ProjectRow(project) {
-                            Toast.makeText(context, "项目详情即将上线", Toast.LENGTH_SHORT).show()
+                            vm.navigate(AppScreen.ProjectDetail(project.id))
                         }
                     }
                 }
@@ -356,6 +364,94 @@ fun HomeScreen(
                 }
             },
             modifier = Modifier.align(Alignment.BottomCenter),
+        )
+    }
+
+    if (newProjectOpen) {
+        AlertDialog(
+            onDismissRequest = { newProjectOpen = false },
+            shape = RoundedCornerShape(22.dp),
+            containerColor = White,
+            title = { Text("新建项目", color = Ink, fontSize = 19.sp, fontWeight = FontWeight.SemiBold) },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = projectName,
+                        onValueChange = { if (it.length <= 30) projectName = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        placeholder = { Text("项目名称", color = Muted, fontSize = 14.sp) },
+                        textStyle = TextStyle(fontSize = 15.sp, color = Ink),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Ink,
+                            unfocusedBorderColor = Line,
+                            cursorColor = Ink,
+                        ),
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Text("项目类型", color = Ink, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                    Spacer(Modifier.height(7.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ProjectTypeChip(
+                            label = "通用项目",
+                            selected = !projectIsWebsite,
+                            onClick = { projectIsWebsite = false },
+                        )
+                        ProjectTypeChip(
+                            label = "网站项目",
+                            selected = projectIsWebsite,
+                            onClick = { projectIsWebsite = true },
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = "项目会创建专属工作区与隐藏 Agent，对话仍使用同一套 ChatConversation。",
+                        color = Muted,
+                        fontSize = 11.5.sp,
+                        lineHeight = 17.sp,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = projectName.isNotBlank(),
+                    onClick = {
+                        val project = vm.createProject(projectName, projectIsWebsite)
+                        newProjectOpen = false
+                        vm.navigate(AppScreen.ProjectDetail(project.id))
+                    },
+                ) {
+                    Text("创建", color = Ink, fontWeight = FontWeight.Medium)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { newProjectOpen = false }) {
+                    Text("取消", color = Muted)
+                }
+            },
+        )
+    }
+}
+
+@Composable
+private fun ProjectTypeChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(9.dp))
+            .background(if (selected) Ink else Color(0xFFF0EEE9))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 7.dp),
+    ) {
+        Text(
+            text = label,
+            color = if (selected) White else Ink,
+            fontSize = 12.5.sp,
+            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
         )
     }
 }

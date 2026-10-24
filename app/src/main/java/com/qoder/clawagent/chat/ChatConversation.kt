@@ -1,6 +1,7 @@
 package com.qoder.clawagent.chat
 
 import com.qoder.clawagent.model.Agent
+import com.qoder.clawagent.model.ChatAttachment
 import com.qoder.clawagent.model.ChatMessage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -55,7 +56,7 @@ enum class SendResult {
  * the reply job or the message buffer. Tests cross the same interface.
  */
 class ChatConversation(
-    private val agent: Agent,
+    private var agent: Agent,
     private val replies: ReplySource,
     private val scope: CoroutineScope,
     initialMessages: List<ChatMessage> = emptyList(),
@@ -71,9 +72,14 @@ class ChatConversation(
     private var replyJob: Job? = null
     private var generation = 0
 
-    fun send(raw: String): SendResult {
+    /** Keeps an open conversation in sync when Agent settings are saved. */
+    fun updateAgent(updated: Agent) {
+        agent = updated
+    }
+
+    fun send(raw: String, attachments: List<ChatAttachment> = emptyList()): SendResult {
         val text = raw.trim()
-        if (text.isEmpty()) return SendResult.EMPTY
+        if (text.isEmpty() && attachments.isEmpty()) return SendResult.EMPTY
         if (_state.value.isBusy) return SendResult.BUSY
 
         _state.update { current ->
@@ -83,6 +89,7 @@ class ChatConversation(
                     fromUser = true,
                     text = text,
                     time = formatTime(now()),
+                    attachments = attachments,
                 ),
             )
         }

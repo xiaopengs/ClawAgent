@@ -1,6 +1,5 @@
 package com.qoder.clawagent.ui.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -30,7 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -49,7 +47,6 @@ import com.qoder.clawagent.ui.theme.White
 
 @Composable
 fun CozeTemplatesScreen(vm: AppViewModel) {
-    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -64,7 +61,7 @@ fun CozeTemplatesScreen(vm: AppViewModel) {
         ) {
             item {
                 UpgradeBanner {
-                    Toast.makeText(context, "升级入口即将上线", Toast.LENGTH_SHORT).show()
+                    vm.navigate(AppScreen.Upgrade)
                 }
                 Spacer(Modifier.height(18.dp))
                 Text(

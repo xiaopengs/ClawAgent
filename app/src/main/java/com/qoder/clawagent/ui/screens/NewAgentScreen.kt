@@ -1,6 +1,5 @@
 package com.qoder.clawagent.ui.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,7 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -49,7 +47,6 @@ import com.qoder.clawagent.ui.theme.White
 
 @Composable
 fun NewAgentScreen(vm: AppViewModel) {
-    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -86,7 +83,7 @@ fun NewAgentScreen(vm: AppViewModel) {
                     )
                 },
             ) {
-                Toast.makeText(context, "三方精选 Agent 即将上线", Toast.LENGTH_SHORT).show()
+                vm.navigate(AppScreen.ThirdPartyAgents)
             }
             NewAgentOption(
                 icon = Icons.Outlined.Computer,
@@ -101,7 +98,7 @@ fun NewAgentScreen(vm: AppViewModel) {
                     )
                 },
             ) {
-                Toast.makeText(context, "本地 Agent 接入即将上线", Toast.LENGTH_SHORT).show()
+                vm.navigate(AppScreen.LocalAgent)
             }
         }
     }
