@@ -119,7 +119,7 @@ fun ScheduleScreen(vm: AppViewModel, onOpenExtensions: (Int) -> Unit) {
                                 fontWeight = FontWeight.SemiBold,
                             )
                             Spacer(Modifier.height(2.dp))
-                            Text("任务到点后由对应 Agent 执行，结果会回到会话。", color = Muted, fontSize = 11.5.sp)
+                            Text("本地配置 · 定时执行需云端 worker", color = Muted, fontSize = 11.5.sp)
                         }
                     }
                 }

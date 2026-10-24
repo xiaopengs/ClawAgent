@@ -136,14 +136,14 @@ fun DriveScreen(vm: AppViewModel, onOpenExtensions: (Int) -> Unit) {
                     ) {
                         Column(Modifier.weight(1f)) {
                             Text(
-                                text = "云端工作区文件",
+                                text = "工作区文件",
                                 color = Ink,
                                 fontSize = 14.5.sp,
                                 fontWeight = FontWeight.SemiBold,
                             )
                             Spacer(Modifier.height(3.dp))
                             Text(
-                                text = if (importing) "正在读取文件…" else "${files.size} 个文件 · 图片与文档可从对话或本页添加",
+                                text = if (importing) "正在读取文件…" else "${files.size} 个文件 · 本地演示工作区，可从对话或本页添加",
                                 color = Muted,
                                 fontSize = 11.5.sp,
                             )

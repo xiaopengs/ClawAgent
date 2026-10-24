@@ -101,7 +101,7 @@ fun TopicTrackingScreen(vm: AppViewModel, focusTopicId: String? = null) {
                     )
                     Spacer(Modifier.width(11.dp))
                     Text(
-                        text = "持续跟踪对话里的话题，新的进展会汇总到这里。",
+                        text = "集中管理你关注的话题；对话中的追踪卡会汇总到这里。",
                         color = Ink.copy(alpha = 0.76f),
                         fontSize = 12.5.sp,
                         lineHeight = 18.sp,
