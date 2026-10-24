@@ -8,6 +8,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.qoder.clawagent.chat.ChatConversation
 import com.qoder.clawagent.chat.ChatState
+import com.qoder.clawagent.chat.ReplyEngine
+import com.qoder.clawagent.chat.ReplySource
 import com.qoder.clawagent.chat.SendResult
 import com.qoder.clawagent.data.SampleData
 import com.qoder.clawagent.model.Agent
@@ -15,6 +17,7 @@ import com.qoder.clawagent.model.AppScreen
 import com.qoder.clawagent.model.AvatarStyle
 import com.qoder.clawagent.model.ChatMessage
 import com.qoder.clawagent.model.Project
+import com.qoder.clawagent.network.AdkReplySource
 import com.qoder.clawagent.network.InMemoryOpenRouterSettingsStore
 import com.qoder.clawagent.network.OpenRouterRepository
 import com.qoder.clawagent.network.OpenRouterSettingsStore
@@ -27,10 +30,19 @@ import java.util.Date
 import java.util.Locale
 
 class AppViewModel(
-    openRouterStore: OpenRouterSettingsStore = InMemoryOpenRouterSettingsStore(),
+    private val settingsStore: OpenRouterSettingsStore = InMemoryOpenRouterSettingsStore(),
 ) : ViewModel() {
 
-    private val openRouter = OpenRouterRepository(openRouterStore)
+    private val openRouter = OpenRouterRepository(settingsStore)
+    private val adk = AdkReplySource(settingsStore)
+
+    /** One seam, two runtimes; the settings dialog decides which one answers. */
+    private val replies = ReplySource { agent, history ->
+        when (openRouter.config().engine) {
+            ReplyEngine.OPENROUTER -> openRouter.stream(agent, history)
+            ReplyEngine.ADK -> adk.stream(agent, history)
+        }
+    }
     private val conversations = mutableMapOf<String, ChatConversation>()
     private val emptyChat = MutableStateFlow(ChatState())
 
@@ -111,8 +123,8 @@ class AppViewModel(
 
     fun openRouterConfig() = openRouter.config()
 
-    fun saveOpenRouterConfig(apiKey: String, model: String) {
-        openRouter.saveConfig(apiKey = apiKey, model = model)
+    fun saveOpenRouterConfig(apiKey: String, model: String, engine: ReplyEngine) {
+        openRouter.saveConfig(apiKey = apiKey, model = model, engine = engine)
     }
 
     fun clearChat(agentId: String) {
@@ -166,7 +178,7 @@ class AppViewModel(
     private fun conversationFor(agent: Agent, initialMessages: List<ChatMessage>): ChatConversation =
         ChatConversation(
             agent = agent,
-            replies = openRouter,
+            replies = replies,
             scope = viewModelScope,
             initialMessages = initialMessages,
             nextId = { ++messageId },

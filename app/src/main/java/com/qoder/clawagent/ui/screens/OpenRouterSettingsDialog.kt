@@ -32,6 +32,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.qoder.clawagent.chat.ReplyEngine
 import com.qoder.clawagent.network.OpenRouterConfig
 import com.qoder.clawagent.ui.theme.Ink
 import com.qoder.clawagent.ui.theme.Line
@@ -41,12 +42,13 @@ import com.qoder.clawagent.ui.theme.White
 @Composable
 internal fun OpenRouterSettingsDialog(
     initial: OpenRouterConfig,
-    onSave: (apiKey: String, model: String) -> Unit,
+    onSave: (apiKey: String, model: String, engine: ReplyEngine) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
     var model by remember { mutableStateOf(initial.model) }
     var apiKey by remember { mutableStateOf("") }
+    var engine by remember { mutableStateOf(initial.engine) }
     val keyConfigured = initial.apiKey.isNotBlank()
     val canSave = model.isNotBlank() && (apiKey.isNotBlank() || keyConfigured)
 
@@ -70,7 +72,34 @@ internal fun OpenRouterSettingsDialog(
                 color = Muted,
                 fontSize = 12.5.sp,
             )
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(14.dp))
+            Text("对话引擎", color = Ink, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+            Spacer(Modifier.height(7.dp))
+            Row(modifier = Modifier.fillMaxWidth()) {
+                EngineChoice(
+                    label = "直连 OpenRouter",
+                    selected = engine == ReplyEngine.OPENROUTER,
+                    modifier = Modifier.weight(1f),
+                ) { engine = ReplyEngine.OPENROUTER }
+                Spacer(Modifier.width(8.dp))
+                EngineChoice(
+                    label = "ADK Agent",
+                    selected = engine == ReplyEngine.ADK,
+                    modifier = Modifier.weight(1f),
+                ) { engine = ReplyEngine.ADK }
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = if (engine == ReplyEngine.ADK) {
+                    "Google ADK 运行时：会话、指令与工具编排；模型仍走 OpenRouter。"
+                } else {
+                    "轻量直连，流式输出，启动最快。"
+                },
+                color = Muted,
+                fontSize = 11.5.sp,
+                lineHeight = 16.sp,
+            )
+            Spacer(Modifier.height(16.dp))
             Text("模型 ID", color = Ink, fontSize = 13.sp, fontWeight = FontWeight.Medium)
             Spacer(Modifier.height(6.dp))
             OutlinedTextField(
@@ -142,7 +171,7 @@ internal fun OpenRouterSettingsDialog(
                         .clip(RoundedCornerShape(12.dp))
                         .background(if (canSave) Ink else Color(0xFFB9B6B1))
                         .clickable(enabled = canSave) {
-                            onSave(apiKey.ifBlank { initial.apiKey }, model)
+                            onSave(apiKey.ifBlank { initial.apiKey }, model, engine)
                             Toast.makeText(context, "OpenRouter 设置已保存", Toast.LENGTH_SHORT).show()
                             onDismiss()
                         }
@@ -158,6 +187,30 @@ internal fun OpenRouterSettingsDialog(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun EngineChoice(
+    label: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (selected) Ink else Color(0xFFF1EFEA))
+            .clickable(onClick = onClick)
+            .padding(vertical = 10.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            color = if (selected) White else Ink,
+            fontSize = 13.sp,
+            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
+        )
     }
 }
 

@@ -1,5 +1,6 @@
 package com.qoder.clawagent
 
+import com.qoder.clawagent.chat.ReplyEngine
 import com.qoder.clawagent.model.Agent
 import com.qoder.clawagent.model.AvatarStyle
 import com.qoder.clawagent.model.ChatMessage
@@ -47,6 +48,21 @@ class OpenRouterRepositoryTest {
         assertTrue(messages.first().content.contains("测试助手"))
         assertEquals(listOf(PromptRole.ASSISTANT, PromptRole.USER), messages.drop(1).map { it.role })
         assertEquals(3, messages.size)
+    }
+
+    @Test
+    fun `saveConfig persists the selected engine`() {
+        val store = InMemoryOpenRouterSettingsStore(
+            OpenRouterConfig(apiKey = "test-key", model = "test-model", baseUrl = "https://example.com/v1/"),
+        )
+        val repository = OpenRouterRepository(store)
+
+        repository.saveConfig(apiKey = "new-key", model = "new-model", engine = ReplyEngine.ADK)
+
+        val saved = repository.config()
+        assertEquals(ReplyEngine.ADK, saved.engine)
+        assertEquals("new-key", saved.apiKey)
+        assertEquals("new-model", saved.model)
     }
 }
 

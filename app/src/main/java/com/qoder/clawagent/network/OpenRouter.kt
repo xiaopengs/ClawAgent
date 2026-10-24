@@ -12,8 +12,10 @@ import com.aallam.openai.client.LoggingConfig
 import com.aallam.openai.client.OpenAIHost
 import com.aallam.openai.client.RetryStrategy
 import com.qoder.clawagent.BuildConfig
+import com.qoder.clawagent.chat.ReplyEngine
 import com.qoder.clawagent.chat.ReplySource
 import com.qoder.clawagent.chat.ReplyUnavailableException
+import com.qoder.clawagent.chat.agentInstruction
 import com.qoder.clawagent.model.Agent
 import io.ktor.client.engine.okhttp.OkHttp
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +28,7 @@ data class OpenRouterConfig(
     val apiKey: String,
     val model: String,
     val baseUrl: String,
+    val engine: ReplyEngine = ReplyEngine.OPENROUTER,
 )
 
 enum class PromptRole { SYSTEM, USER, ASSISTANT }
@@ -69,6 +72,8 @@ class PrefsOpenRouterSettingsStore(context: Context) : OpenRouterSettingsStore {
         apiKey = prefs.stringOrDefault(KEY_API_KEY, BuildConfig.OPENROUTER_API_KEY),
         model = prefs.stringOrDefault(KEY_MODEL, BuildConfig.OPENROUTER_MODEL),
         baseUrl = prefs.stringOrDefault(KEY_BASE_URL, BuildConfig.OPENROUTER_BASE_URL),
+        engine = prefs.stringOrDefault(KEY_ENGINE, ReplyEngine.OPENROUTER.name)
+            .let { stored -> ReplyEngine.entries.firstOrNull { it.name == stored } ?: ReplyEngine.OPENROUTER },
     )
 
     override fun save(config: OpenRouterConfig) {
@@ -76,6 +81,7 @@ class PrefsOpenRouterSettingsStore(context: Context) : OpenRouterSettingsStore {
             .putString(KEY_API_KEY, config.apiKey)
             .putString(KEY_MODEL, config.model)
             .putString(KEY_BASE_URL, config.baseUrl)
+            .putString(KEY_ENGINE, config.engine.name)
             .apply()
     }
 
@@ -86,6 +92,7 @@ class PrefsOpenRouterSettingsStore(context: Context) : OpenRouterSettingsStore {
         const val KEY_API_KEY = "api_key"
         const val KEY_MODEL = "model"
         const val KEY_BASE_URL = "base_url"
+        const val KEY_ENGINE = "engine"
     }
 }
 
@@ -148,12 +155,13 @@ class OpenRouterRepository(
 
     fun config(): OpenRouterConfig = settingsStore.load()
 
-    fun saveConfig(apiKey: String, model: String) {
+    fun saveConfig(apiKey: String, model: String, engine: ReplyEngine) {
         val current = settingsStore.load()
         settingsStore.save(
             current.copy(
                 apiKey = apiKey.trim(),
                 model = model.trim().ifBlank { current.model },
+                engine = engine,
             ),
         )
     }
@@ -169,12 +177,7 @@ class OpenRouterRepository(
     }
 
     internal fun buildMessages(agent: Agent, history: List<com.qoder.clawagent.model.ChatMessage>): List<PromptMessage> {
-        val systemPrompt = buildString {
-            append("你是「").append(agent.name).append("」，")
-            append(agent.description.ifBlank { "一位可靠的中文 AI 助手" })
-            append("。请始终使用简体中文回答，语气自然、简洁、直接；")
-            append("不要编造不确定的信息，不知道时就明确说明。")
-        }
+        val systemPrompt = agentInstruction(agent)
         val turns = history
             .filter { !it.isError && it.text.isNotBlank() }
             .takeLast(MAX_HISTORY_MESSAGES)

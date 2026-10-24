@@ -1,0 +1,255 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1180" viewBox="0 0 1600 1180" role="img" aria-labelledby="title desc">
+  <title id="title">爪爪 ClawAgent 架构图</title>
+  <desc id="desc">Compose UI 通过 AppViewModel 与 ChatConversation 交互，ChatConversation 依赖 ReplySource 接缝，由 OpenRouterRepository 或 AdkReplySource 实现，二者共用 OpenRouter API 与配置存储。</desc>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8A8782"/>
+    </marker>
+    <marker id="arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#16B38A"/>
+    </marker>
+    <marker id="arrow-dashed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#B8B6B1"/>
+    </marker>
+    <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="1.5" cy="1.5" r="1.5" fill="#D9D6CF"/>
+    </pattern>
+    <style>
+      .title { font: 700 30px 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif; fill: #141312; }
+      .subtitle { font: 400 15px 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif; fill: #6E6B66; }
+      .layer { font: 700 13px 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif; fill: #8A8782; letter-spacing: 1.5px; }
+      .box-title { font: 700 17px 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif; fill: #141312; }
+      .box-title-light { font: 700 17px 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif; fill: #FFFFFF; }
+      .box-text { font: 400 12.5px 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif; fill: #6E6B66; }
+      .box-text-light { font: 400 12.5px 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif; fill: #D8D5CF; }
+      .mono { font: 500 12.5px 'JetBrains Mono','SFMono-Regular',Consolas,monospace; fill: #4E63EA; }
+      .mono-light { font: 500 12.5px 'JetBrains Mono','SFMono-Regular',Consolas,monospace; fill: #9FE6D2; }
+      .label { font: 500 12px 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif; fill: #8A8782; }
+      .box { fill: #FFFFFF; stroke: #DCD9D3; stroke-width: 1.5; }
+      .box-soft { fill: #FAF9F7; stroke: #E4E1DB; stroke-width: 1.5; }
+      .box-accent { fill: #E9F5F0; stroke: #16B38A; stroke-width: 1.5; }
+      .box-ink { fill: #1B1A18; stroke: #1B1A18; stroke-width: 1.5; }
+      .box-test { fill: #F7F6F3; stroke: #C9C6C0; stroke-width: 1.5; stroke-dasharray: 5 5; }
+      .arrow { stroke: #8A8782; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+      .arrow-accent { stroke: #16B38A; stroke-width: 2; fill: none; marker-end: url(#arrow-accent); }
+      .arrow-dashed { stroke: #B8B6B1; stroke-width: 1.8; fill: none; stroke-dasharray: 6 6; marker-end: url(#arrow-dashed); }
+      .pill-text { font: 700 11.5px 'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif; fill: #FFFFFF; letter-spacing: .4px; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1180" fill="#F4F3F1"/>
+  <rect width="1600" height="1180" fill="url(#dots)" opacity=".55"/>
+
+  <text x="64" y="72" class="title">爪爪 · AI Agent 对话</text>
+  <text x="64" y="102" class="subtitle">Android 原生架构总览（v1.3）· 一处 ReplySource 接缝，两种推理引擎</text>
+  <g transform="translate(1348,50)">
+    <rect width="188" height="40" rx="20" fill="#141312"/>
+    <text x="94" y="25" text-anchor="middle" style="font:600 13px 'Noto Sans SC','PingFang SC',sans-serif; fill:#FFFFFF;">Kotlin 2.3.21 · Compose</text>
+  </g>
+
+  <!-- 1. UI -->
+  <text x="64" y="142" class="layer">① UI · JETPACK COMPOSE</text>
+  <rect x="64" y="156" width="1080" height="196" rx="22" fill="#FFFFFF" fill-opacity=".55" stroke="#E2DFD9" stroke-width="1.5"/>
+  <rect x="88" y="182" width="184" height="146" rx="16" class="box"/>
+  <text x="106" y="213" class="box-title">ClawApp</text>
+  <text x="106" y="238" class="box-text">根组件 · 页面栈</text>
+  <text x="106" y="258" class="box-text">AnimatedContent 转场</text>
+  <text x="106" y="278" class="box-text">BackHandler · Insets</text>
+  <text x="106" y="307" class="mono">collectAsState()</text>
+
+  <rect x="300" y="182" width="186" height="58" rx="14" class="box"/>
+  <text x="316" y="207" class="box-title" style="font-size:15px;">HomeScreen</text>
+  <text x="316" y="226" class="box-text">Agent 列表 · 最近项目</text>
+  <rect x="300" y="254" width="186" height="74" rx="14" class="box-accent"/>
+  <text x="316" y="279" class="box-title" style="font-size:15px;">ChatScreen</text>
+  <text x="316" y="299" class="box-text">ChatHeader · ChatThread</text>
+  <text x="316" y="317" class="box-text">输入区 · 模型设置弹层</text>
+
+  <rect x="514" y="182" width="186" height="58" rx="14" class="box"/>
+  <text x="530" y="207" class="box-title" style="font-size:15px;">ExtensionsOverlay</text>
+  <text x="530" y="226" class="box-text">插件 · 技能 · MCP</text>
+  <rect x="514" y="254" width="186" height="74" rx="14" class="box"/>
+  <text x="530" y="279" class="box-title" style="font-size:15px;">AgentCreateFlow</text>
+  <text x="530" y="299" class="box-text">职业模板 · 直接创建</text>
+  <text x="530" y="317" class="box-text">扩展能力多选</text>
+
+  <rect x="728" y="182" width="186" height="58" rx="14" class="box"/>
+  <text x="744" y="207" class="box-title" style="font-size:15px;">Theme · Avatars</text>
+  <text x="744" y="226" class="box-text">Material 3 · Canvas 手绘</text>
+  <rect x="728" y="254" width="186" height="74" rx="14" class="box"/>
+  <text x="744" y="279" class="box-title" style="font-size:15px;">SettingsDialog</text>
+  <text x="744" y="299" class="box-text">API Key · 模型 ID</text>
+  <text x="744" y="317" class="box-text">引擎切换（直连 / ADK）</text>
+
+  <rect x="942" y="182" width="178" height="146" rx="16" fill="#FAF9F7" stroke="#E4E1DB" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <text x="960" y="213" class="box-title" style="font-size:15px;">无素材依赖</text>
+  <text x="960" y="238" class="box-text">图标使用 Material Icons</text>
+  <text x="960" y="258" class="box-text">头像由 Compose Canvas</text>
+  <text x="960" y="278" class="box-text">按种子绘制</text>
+  <text x="960" y="307" class="box-text">截图：Roborazzi 1080×2340</text>
+
+  <!-- arrows UI to domain -->
+  <path d="M180 352 V400" class="arrow"/>
+  <text x="192" y="344" class="label">navigate / createAgent</text>
+  <path d="M390 352 V400" class="arrow"/>
+  <text x="402" y="344" class="label">StateFlow&lt;ChatState&gt;</text>
+
+  <!-- 2. domain -->
+  <text x="64" y="398" class="layer">② 应用与领域 · 深模块</text>
+  <rect x="64" y="404" width="1080" height="220" rx="22" fill="#FFFFFF" fill-opacity=".55" stroke="#E2DFD9" stroke-width="1.5"/>
+  <rect x="88" y="436" width="252" height="168" rx="16" class="box"/>
+  <text x="106" y="467" class="box-title">AppViewModel</text>
+  <text x="106" y="492" class="box-text">页面栈 · Agent / 项目列表</text>
+  <text x="106" y="512" class="box-text">会话缓存 · 预览摘要</text>
+  <text x="106" y="532" class="box-text">模型设置委托</text>
+  <rect x="106" y="550" width="216" height="34" rx="17" fill="#EDECE9"/>
+  <text x="214" y="572" text-anchor="middle" style="font:600 11.5px 'JetBrains Mono',Consolas,monospace; fill:#4E63EA;">engine = OPENROUTER | ADK</text>
+
+  <rect x="382" y="436" width="292" height="168" rx="16" class="box-ink"/>
+  <text x="402" y="467" class="box-title-light">ChatConversation</text>
+  <text x="402" y="492" class="box-text-light">唯一会话状态源</text>
+  <text x="402" y="512" class="mono-light">state · send · retry · clear</text>
+  <text x="402" y="536" class="box-text-light">流式缓冲 · 首包等待 · 取消</text>
+  <text x="402" y="556" class="box-text-light">代次隔离 · 已处理 N 秒</text>
+  <text x="402" y="576" class="box-text-light">401 / 402 / 429 / 超时映射</text>
+
+  <rect x="716" y="436" width="244" height="168" rx="16" class="box-accent"/>
+  <text x="736" y="463" class="box-text" style="font-style:italic;">«interface»</text>
+  <text x="736" y="489" class="box-title">ReplySource</text>
+  <text x="736" y="515" class="mono">stream(agent, history)</text>
+  <text x="736" y="537" class="mono">  : Flow&lt;String&gt;</text>
+  <text x="736" y="563" class="box-text">UI 与网络之间的唯一边界</text>
+  <text x="736" y="583" class="box-text">测试用内存假实现替换</text>
+
+  <rect x="1002" y="436" width="118" height="168" rx="16" class="box-soft"/>
+  <text x="1061" y="466" text-anchor="middle" class="box-title" style="font-size:14px;">ReplyEngine</text>
+  <text x="1061" y="490" text-anchor="middle" class="box-text">运行时枚举</text>
+  <text x="1061" y="516" text-anchor="middle" class="mono" style="font-size:11px;">OPENROUTER</text>
+  <text x="1061" y="538" text-anchor="middle" class="mono" style="font-size:11px;">ADK</text>
+  <path d="M1061 556 V584" stroke="#C9C6C0" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <text x="1061" y="598" text-anchor="middle" class="label">持久化于设置</text>
+
+  <path d="M340 520 H382" class="arrow"/>
+  <text x="344" y="510" class="label">send()</text>
+  <path d="M674 520 H716" class="arrow"/>
+  <text x="678" y="510" class="label">history</text>
+
+  <!-- 3. adapters -->
+  <text x="64" y="654" class="layer">③ 适配器 · 同一条缝的两种实现</text>
+  <rect x="64" y="668" width="1080" height="212" rx="22" fill="#FFFFFF" fill-opacity=".55" stroke="#E2DFD9" stroke-width="1.5"/>
+
+  <rect x="92" y="700" width="438" height="152" rx="16" class="box"/>
+  <rect x="92" y="700" width="438" height="34" rx="16" fill="#4E63EA"/>
+  <rect x="92" y="718" width="438" height="16" fill="#4E63EA"/>
+  <text x="110" y="723" class="pill-text">OPENROUTER · 直连</text>
+  <text x="110" y="762" class="box-title">OpenRouterRepository</text>
+  <text x="110" y="786" class="box-text">aallam openai-client 4.1.0 + Ktor OkHttp</text>
+  <text x="110" y="806" class="box-text">Chat Completions · SSE 流式分块</text>
+  <text x="110" y="826" class="box-text">系统提示词 · 历史裁剪（12 条 / 6000 字）</text>
+  <text x="110" y="844" class="mono" style="font-size:11.5px;">/chat/completions</text>
+
+  <rect x="588" y="700" width="462" height="152" rx="16" class="box"/>
+  <rect x="588" y="700" width="462" height="34" rx="16" fill="#7D5CF0"/>
+  <rect x="588" y="718" width="462" height="16" fill="#7D5CF0"/>
+  <text x="606" y="723" class="pill-text">ADK · AGENT RUNTIME</text>
+  <text x="606" y="762" class="box-title">AdkReplySource</text>
+  <text x="606" y="786" class="box-text">Google ADK Kotlin 1.4.0 · LlmAgent + InMemoryRunner</text>
+  <text x="606" y="806" class="box-text">每轮新建内存 Session，回放可见历史</text>
+  <text x="606" y="826" class="box-text">OpenAI 兼容 ChatCompletions 后端</text>
+  <text x="606" y="844" class="mono" style="font-size:11.5px;">FunctionTool: get_local_time()</text>
+
+  <path d="M838 604 V624 H311 V700" class="arrow"/>
+  <text x="322" y="616" class="label">engine = OPENROUTER</text>
+  <path d="M838 604 V624 H819 V700" class="arrow"/>
+  <text x="852" y="616" class="label">engine = ADK</text>
+
+  <!-- 4. config -->
+  <text x="64" y="916" class="layer">④ 配置与存储 · 每次请求实时读取</text>
+  <rect x="64" y="928" width="1080" height="150" rx="22" fill="#FFFFFF" fill-opacity=".55" stroke="#E2DFD9" stroke-width="1.5"/>
+  <rect x="92" y="958" width="310" height="92" rx="14" class="box-soft"/>
+  <text x="108" y="983" class="box-title" style="font-size:15px;">OpenRouterSettingsStore</text>
+  <text x="108" y="1005" class="box-text">Prefs / InMemory 两种实现</text>
+  <text x="108" y="1024" class="box-text">key · model · baseUrl · engine</text>
+  <text x="108" y="1042" class="mono" style="font-size:11px;">load() / saveConfig()</text>
+
+  <rect x="426" y="958" width="290" height="92" rx="14" class="box-soft"/>
+  <text x="442" y="983" class="box-title" style="font-size:15px;">BuildConfig</text>
+  <text x="442" y="1005" class="box-text">local.properties → OPENROUTER_*</text>
+  <text x="442" y="1024" class="box-text">构建时注入默认值</text>
+  <text x="442" y="1042" class="box-text" style="fill:#ED5B50;">local.properties 已被 git 忽略</text>
+
+  <rect x="740" y="958" width="218" height="92" rx="14" class="box-soft"/>
+  <text x="756" y="983" class="box-title" style="font-size:15px;">SharedPreferences</text>
+  <text x="756" y="1005" class="box-text">App 内运行时覆盖</text>
+  <text x="756" y="1024" class="box-text">仅适合本机试验</text>
+
+  <rect x="982" y="958" width="136" height="92" rx="14" fill="#FDEDEB" stroke="#ED5B50" stroke-width="1.2" stroke-dasharray="4 4"/>
+  <text x="1050" y="983" text-anchor="middle" class="box-title" style="font-size:14px; fill:#B63A31;">安全边界</text>
+  <text x="1050" y="1005" text-anchor="middle" class="box-text">Key 会进入</text>
+  <text x="1050" y="1023" text-anchor="middle" class="box-text">debug APK</text>
+
+  <path d="M600 928 V880" class="arrow-dashed"/>
+  <text x="612" y="907" class="label">settings.load()</text>
+
+  <!-- right column: engines -->
+  <text x="1184" y="142" class="layer">引擎开关</text>
+  <rect x="1184" y="156" width="352" height="186" rx="20" class="box"/>
+  <text x="1204" y="187" class="box-title">两种推理引擎</text>
+  <rect x="1204" y="204" width="46" height="24" rx="12" fill="#16B38A"/>
+  <text x="1227" y="220" text-anchor="middle" class="pill-text">直连</text>
+  <text x="1262" y="221" class="box-text" style="fill:#141312;">OpenRouterRepository</text>
+  <text x="1204" y="245" class="box-text">轻量 · 依赖少 · 首包直接透传</text>
+  <rect x="1204" y="262" width="46" height="24" rx="12" fill="#7D5CF0"/>
+  <text x="1227" y="278" text-anchor="middle" class="pill-text">ADK</text>
+  <text x="1262" y="279" class="box-text" style="fill:#141312;">AdkReplySource</text>
+  <text x="1204" y="303" class="box-text">工具调用 · 事件流 · 会话运行时</text>
+  <text x="1204" y="326" class="box-text">同一 Key、同一模型、同一条接口</text>
+
+  <!-- design notes -->
+  <text x="1184" y="376" class="layer">设计要点</text>
+  <rect x="1184" y="390" width="352" height="198" rx="20" fill="#1B1A18"/>
+  <text x="1204" y="421" class="box-title-light">为什么这样切</text>
+  <circle cx="1212" cy="447" r="3" fill="#16B38A"/>
+  <text x="1226" y="452" class="box-text-light">UI 不认识网络，只认识 state 与意图</text>
+  <circle cx="1212" cy="475" r="3" fill="#16B38A"/>
+  <text x="1226" y="480" class="box-text-light">ChatConversation 是唯一状态源</text>
+  <circle cx="1212" cy="503" r="3" fill="#16B38A"/>
+  <text x="1226" y="508" class="box-text-light">清空即取消，迟到分块不写回</text>
+  <circle cx="1212" cy="531" r="3" fill="#16B38A"/>
+  <text x="1226" y="536" class="box-text-light">ADK 被隔离在适配器内，可随时移除</text>
+  <text x="1204" y="570" class="mono-light" style="font-size:11.5px;">one seam, two runtimes</text>
+
+  <!-- API -->
+  <text x="1184" y="644" class="layer">外部依赖</text>
+  <rect x="1184" y="658" width="352" height="222" rx="20" class="box" style="stroke:#4E63EA;"/>
+  <rect x="1184" y="658" width="352" height="38" rx="20" fill="#4E63EA"/>
+  <rect x="1184" y="676" width="352" height="20" fill="#4E63EA"/>
+  <text x="1204" y="682" class="pill-text">OPENROUTER API · HTTPS</text>
+  <text x="1204" y="721" class="box-title">OpenAI 兼容网关</text>
+  <text x="1204" y="747" class="mono">POST /api/v1/chat/completions</text>
+  <text x="1204" y="771" class="box-text">Authorization: Bearer &lt;key&gt;</text>
+  <text x="1204" y="794" class="box-text">SSE：data: {...} 流式分块</text>
+  <text x="1204" y="817" class="box-text">openrouter/free 自动路由免费模型</text>
+  <text x="1204" y="840" class="box-text">两个适配器共用同一个端点与凭证</text>
+  <text x="1204" y="864" class="mono" style="font-size:11px;">401 · 402 · 429 · timeout → 中文提示</text>
+
+  <path d="M1050 780 H1184" class="arrow" style="stroke:#4E63EA; marker-end:url(#arrow);"/>
+  <rect x="1088" y="762" width="72" height="22" rx="11" fill="#EEF0FE"/>
+  <text x="1124" y="777" text-anchor="middle" class="label" style="fill:#4E63EA;">HTTPS</text>
+
+  <!-- tests -->
+  <text x="1184" y="908" class="layer">测试与验证</text>
+  <rect x="1184" y="922" width="352" height="156" rx="20" class="box-test"/>
+  <text x="1204" y="950" class="box-title" style="font-size:15px;">19 个测试 · 2 个联调用例按需开启</text>
+  <text x="1204" y="975" class="box-text">ChatConversationTest ×7</text>
+  <text x="1204" y="996" class="box-text">OpenRouterRepositoryTest ×2</text>
+  <text x="1204" y="1017" class="box-text">AdkReplySourceTest ×2</text>
+  <text x="1204" y="1038" class="box-text">ScreenshotTest (Roborazzi) ×8</text>
+  <text x="1204" y="1059" class="box-text">OpenRouterLiveTest / AdkLiveTest ×2</text>
+
+  <!-- footer -->
+  <line x1="64" y1="1118" x2="1536" y2="1118" stroke="#DCD9D3" stroke-width="1.5"/>
+  <text x="64" y="1146" class="subtitle" style="font-size:13px;">实线 = 运行时调用　虚线 = 配置读取　·　ADK 1.4.0 需要 compileSdk 37 / Kotlin 2.3；接缝保证它不会渗进会话领域</text>
+  <text x="1536" y="1146" text-anchor="end" class="label">docs/architecture.svg</text>
+</svg>
