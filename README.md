@@ -6,6 +6,8 @@
 
 当前版本：**v1.3（versionCode 4）**
 
+仓库地址：<https://github.com/xiaopengs/ClawAgent>
+
 ## 效果预览
 
 <table>
@@ -142,6 +144,11 @@ OPENROUTER_BASE_URL=https://openrouter.ai/api/v1/
 - Roborazzi 1.77.0 + Robolectric 4.17 离屏截图测试；`kotlinx-coroutines-test` 会话接口测试
 
 ## 运行与构建
+
+```bash
+git clone https://github.com/xiaopengs/ClawAgent.git
+cd ClawAgent
+```
 
 环境要求：
 
