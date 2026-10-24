@@ -3,9 +3,11 @@ package com.qoder.clawagent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import app.cash.paparazzi.DeviceConfig
-import app.cash.paparazzi.Paparazzi
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onRoot
+import com.github.takahirom.roborazzi.captureRoboImage
 import com.qoder.clawagent.ui.screens.AgentFormScreen
 import com.qoder.clawagent.ui.screens.ChatScreen
 import com.qoder.clawagent.ui.screens.CozeTemplatesScreen
@@ -16,102 +18,68 @@ import com.qoder.clawagent.ui.theme.Bg
 import com.qoder.clawagent.ui.theme.ClawTheme
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [35], qualifiers = "w393dp-h851dp-440dpi")
 class ScreenshotTest {
 
     @get:Rule
-    val paparazzi = Paparazzi(
-        deviceConfig = DeviceConfig.PIXEL_5,
-        theme = "android:Theme.Material.Light.NoActionBar",
-        showSystemUi = false,
-    )
+    val composeRule = createComposeRule()
 
-    @Test
-    fun home() {
-        paparazzi.snapshot {
+    private fun snapshot(name: String, content: @Composable () -> Unit) {
+        composeRule.setContent {
             ClawTheme {
                 Box(Modifier.fillMaxSize().background(Bg)) {
-                    HomeScreen(vm = AppViewModel(), onOpenExtensions = {})
+                    content()
                 }
             }
         }
+        composeRule.onRoot().captureRoboImage("build/outputs/roborazzi/$name.png")
     }
 
     @Test
-    fun chat() {
-        paparazzi.snapshot {
-            ClawTheme {
-                Box(Modifier.fillMaxSize().background(Bg)) {
-                    ChatScreen(vm = AppViewModel(), agentId = "heizhua", onOpenExtensions = {})
-                }
-            }
-        }
+    fun home() = snapshot("home") {
+        HomeScreen(vm = AppViewModel(), onOpenExtensions = {})
     }
 
     @Test
-    fun extensionsSkills() {
-        paparazzi.snapshot {
-            ClawTheme {
-                Box(Modifier.fillMaxSize().background(Bg)) {
-                    HomeScreen(vm = AppViewModel(), onOpenExtensions = {})
-                    ExtensionsOverlay(visible = true, initialTab = 1, vm = AppViewModel(), onDismiss = {})
-                }
-            }
-        }
+    fun chat() = snapshot("chat") {
+        ChatScreen(vm = AppViewModel(), agentId = "heizhua", onOpenExtensions = {})
     }
 
     @Test
-    fun extensionsPlugins() {
-        paparazzi.snapshot {
-            ClawTheme {
-                Box(Modifier.fillMaxSize().background(Bg)) {
-                    ExtensionsOverlay(visible = true, initialTab = 0, vm = AppViewModel(), onDismiss = {})
-                }
-            }
-        }
+    fun extensionsSkills() = snapshot("skills") {
+        HomeScreen(vm = AppViewModel(), onOpenExtensions = {})
+        ExtensionsOverlay(visible = true, initialTab = 1, vm = AppViewModel(), onDismiss = {})
     }
 
     @Test
-    fun extensionsMcp() {
-        paparazzi.snapshot {
-            ClawTheme {
-                Box(Modifier.fillMaxSize().background(Bg)) {
-                    ExtensionsOverlay(visible = true, initialTab = 2, vm = AppViewModel(), onDismiss = {})
-                }
-            }
-        }
+    fun extensionsPlugins() = snapshot("plugins") {
+        ExtensionsOverlay(visible = true, initialTab = 0, vm = AppViewModel(), onDismiss = {})
     }
 
     @Test
-    fun newAgent() {
-        paparazzi.snapshot {
-            ClawTheme {
-                Box(Modifier.fillMaxSize().background(Bg)) {
-                    NewAgentScreen(vm = AppViewModel())
-                }
-            }
-        }
+    fun extensionsMcp() = snapshot("mcp") {
+        ExtensionsOverlay(visible = true, initialTab = 2, vm = AppViewModel(), onDismiss = {})
     }
 
     @Test
-    fun cozeTemplates() {
-        paparazzi.snapshot {
-            ClawTheme {
-                Box(Modifier.fillMaxSize().background(Bg)) {
-                    CozeTemplatesScreen(vm = AppViewModel())
-                }
-            }
-        }
+    fun newAgent() = snapshot("new-agent") {
+        NewAgentScreen(vm = AppViewModel())
     }
 
     @Test
-    fun agentForm() {
-        paparazzi.snapshot {
-            ClawTheme {
-                Box(Modifier.fillMaxSize().background(Bg)) {
-                    AgentFormScreen(vm = AppViewModel(), templateId = null)
-                }
-            }
-        }
+    fun cozeTemplates() = snapshot("templates") {
+        CozeTemplatesScreen(vm = AppViewModel())
+    }
+
+    @Test
+    fun agentForm() = snapshot("form") {
+        AgentFormScreen(vm = AppViewModel(), templateId = null)
     }
 }

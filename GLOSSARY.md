@@ -24,8 +24,15 @@ _Avoid_: answer, completion (both are transport or model vocabulary)
 
 **Reply source**:
 The seam that turns an agent and a conversation history into a stream of reply
-chunks. Production uses OpenRouter; tests use an in-memory source.
+chunks. Production uses one of two implementations, selected by the engine
+setting: direct OpenRouter or ADK. Tests use an in-memory source.
 _Avoid_: backend, API, model client
+
+**Engine**:
+The runtime behind a reply source: `OPENROUTER` (direct SDK streaming) or `ADK`
+(agent runner, events and tools). An engine is a configuration choice, not a
+different conversation.
+_Avoid_: provider, mode (mode is too vague; say engine)
 
 **Waiting**:
 The reply phase after a user turn is accepted but before the first chunk.
