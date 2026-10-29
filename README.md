@@ -8,6 +8,8 @@
 
 仓库地址：<https://github.com/xiaopengs/ClawAgent>
 
+直接下载：[`release/ClawAgent-v1.4-debug.apk`](https://github.com/xiaopengs/ClawAgent/raw/main/release/ClawAgent-v1.4-debug.apk)（约 38 MB，空 Key debug 包，API 26+；安装后在「模型设置」填入自己的 Key）。校验值与安装说明见 [`release/README.md`](release/README.md)。
+
 ## 效果预览
 
 <table>
